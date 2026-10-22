@@ -1,0 +1,77 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash -euo pipefail {0}
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+  HOMEBREW_NO_INSTALL_CLEANUP: "1"
+  HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: "1"
+  HOMEBREW_NO_ASK: "1"
+
+jobs:
+  install-and-test:
+    name: Build from source (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        # Apple Silicon only. Homebrew no longer ships any x86_64 macOS
+        # bottles (Intel Macs are Tier 3), so on macos-15-intel every formula
+        # dependency (dotnet, mongosh -> node -> cmake/icu4c/abseil, ...)
+        # falls back to multi-hour source builds that GitHub's job limit
+        # cancels. Intel users should use the prebuilt GitHub Releases.
+        os: [macos-15]
+    steps:
+      # This action checks out the exact push/PR commit as a local Homebrew tap.
+      - name: Set up Homebrew and check out tap
+        id: setup
+        uses: Homebrew/actions/setup-homebrew@4790763c0a3ba4036f72634dc079c4a7dfcd4878 # 2026.10.19.1
+        with:
+          stable: true
+
+      - name: Set up MongoDB dependency tap
+        run: |
+          brew tap mongodb/brew
+          brew trust --formula mongodb/brew/mongodb-database-tools
+
+      - name: Check formula style
+        run: brew style Formula/mongo-tui.rb
+
+      - name: Install from source
+        env:
+          FORMULA: ${{ steps.setup.outputs.tap-name }}/mongo-tui
+        run: brew install --build-from-source --verbose "$FORMULA"
+
+      - name: Test installed package
+        env:
+          FORMULA: ${{ steps.setup.outputs.tap-name }}/mongo-tui
+        run: brew test --verbose "$FORMULA"
+
+      - name: Audit formula
+        env:
+          FORMULA: ${{ steps.setup.outputs.tap-name }}/mongo-tui
+        run: brew audit --strict --online "$FORMULA"
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: homebrew-logs-${{ matrix.os }}
+          path: ~/Library/Logs/Homebrew
+          if-no-files-found: ignore
