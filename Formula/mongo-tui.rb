@@ -5,6 +5,11 @@ class MongoTui < Formula
   sha256 "f4755f2753ebfbfa2cb7c03361ab2adfb69b1c72c6de0d33cb54172aae823e46"
   license "MIT"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   depends_on "dotnet@10" => :build
   depends_on arch: :arm64
   depends_on macos: :sonoma
