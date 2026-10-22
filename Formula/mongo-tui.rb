@@ -1,7 +1,7 @@
 class MongoTui < Formula
   desc "Terminal UI client for MongoDB"
   homepage "https://github.com/AMEST/mongo-tui"
-  url "https://github.com/AMEST/mongo-tui/archive/refs/tags/v0.5.1.tar.gz"
+  url "https://github.com/AMEST/mongo-tui/archive/refs/tags/v0.5.3.tar.gz"
   sha256 "a8d1a781b25914a8f3b9997ff4b399a6930ef2f89d28202efa466f79339a01b4"
   license "MIT"
 
