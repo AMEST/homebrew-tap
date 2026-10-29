@@ -25,7 +25,9 @@ jobs:
         run: .github/scripts/bump-formula.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # PAT вместо GITHUB_TOKEN для gh: встроенный токен не может
+          # создавать PR, а PR от PAT ещё и запускает CI (pull_request).
+          GH_TOKEN: ${{ secrets.BUMP_PAT }}
           BRANCH: master
           GIT_AUTHOR_NAME: github-actions[bot]
           GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com

@@ -99,7 +99,9 @@ if [[ "${PR:-1}" == "1" ]]; then
   git checkout -b "$bump_branch"
   git add "$FORMULA"
   git commit -m "chore: bump mongo-tui to ${version}"
-  git push -u origin "$bump_branch"
+  # force-with-lease: повторный прогон должен пережить ветку, оставшуюся
+  # от прошлой попытки (например, когда PR не удалось создать).
+  git push -u --force-with-lease origin "$bump_branch"
   gh pr create \
     --base "$BRANCH" \
     --head "$bump_branch" \
